@@ -4,72 +4,75 @@ package qframe_inventory
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
-	"time"
 )
 
 var (
-	str1 = String{Value: "1"}
-	str2 = String{Value: "2"}
-	str3 = String{Value: "3"}
+	cnt1 = NewContainer("CntID1", "CntName1", map[string]string{"eth0": "172.17.0.1"})
+	cnt2 = NewContainer("CntID2", "CntName2", map[string]string{"eth0": "172.17.0.2"})
 )
 
 func TestInventory_SetItem(t *testing.T) {
 	i := NewInventory()
 	assert.IsType(t, Inventory{}, i)
-	i.Data["ID1"] = str1
+	i.Data[cnt1.ID] = cnt1
 	assert.Len(t, i.Data, 1)
-	i.SetItem("ID2", str2)
+	i.SetItem(cnt2.ID, cnt2)
 	assert.Len(t, i.Data, 2)
 }
 
 func TestInventory_GetItem(t *testing.T) {
 	i := NewInventory()
-	i.SetItem("ID1", str1)
-	i.SetItem("ID2", str2)
-	got, err := i.GetItem("ID1")
+	i.SetItem(cnt1.ID, cnt1)
+	i.SetItem(cnt2.ID, cnt2)
+	got, err := i.GetItem(cnt1.ID)
 	assert.NoError(t, err)
-	assert.Equal(t, str1, got)
+	assert.Equal(t, cnt1, got)
 }
 
 func TestInventory_filterItem(t *testing.T) {
-	got, err := filterItem(str1, str1)
+	req1 := NewContainerRequest()
+	req1.Name = "CntName1"
+	got, err := filterItem(req1, cnt1)
 	assert.NoError(t, err)
-	assert.Equal(t, str1, got)
-	got, err = filterItem(str1, str2)
+	assert.Equal(t, cnt1, got)
+	got, err = filterItem(req1, cnt2)
 	assert.Error(t, err, err.Error())
 }
 
+
 func TestInventory_HandleRequest(t *testing.T) {
 	i := NewInventory()
-	i.SetItem("ID1", str1)
-	req := NewInvReq(str1, time.Second)
+	i.SetItem(cnt1.ID, cnt1)
+	req := NewNameContainerRequest(cnt1.Name)
 	err := i.HandleRequest(req)
 	assert.NoError(t, err)
 	m := <-req.Back
-	assert.Equal(t, str1, m)
-	req = NewInvReq(str2, 5*time.Second)
-	err = i.HandleRequest(req)
+	assert.Equal(t, cnt1, m)
+	reqID := NewIDContainerRequest("FakeID")
+	err = i.HandleRequest(reqID)
 	assert.Error(t, err)
+
 }
 
 func TestInventory_ServeRequest(t *testing.T) {
 	i := NewInventory()
-	i.SetItem("ID1", str1)
-	req := NewInvReq(str1, 5*time.Second)
+	i.SetItem(cnt1.ID, cnt1)
+	req := NewNameContainerRequest(cnt1.Name)
 	i.ServeRequest(req)
 	assert.Equal(t, len(i.PendingRequests), 0)
-	req = NewInvReq(str2, 5*time.Second)
-	i.ServeRequest(req)
+	req2 := NewNameContainerRequest(cnt2.Name)
+	i.ServeRequest(req2)
 	assert.Equal(t, len(i.PendingRequests), 1)
 }
 
+
 func TestInventory_CheckRequest(t *testing.T) {
 	i := NewInventory()
-	i.SetItem("ID1", str1)
-	req := NewInvReq(str2, 5*time.Second)
+	req := NewNameContainerRequest(cnt1.Name)
 	i.ServeRequest(req)
-	i.SetItem("ID2", str2)
+	assert.Equal(t, len(i.PendingRequests), 1)
+	i.SetItem(cnt1.ID, cnt1)
 	i.CheckRequests()
 	m := <-req.Back
-	assert.Equal(t, str2, m)
+	assert.Equal(t, cnt1, m)
 }

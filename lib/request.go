@@ -7,25 +7,63 @@ package qframe_inventory
 
 import (
 	"time"
+	"github.com/docker/docker/api/types"
+
 )
 
-type Interface interface {
-	Equal(interface{}) bool
+type ContainerRequest struct {
+	IssuedAt time.Time
+	Name string
+	ID string
+	IP string
+	Back chan types.ContainerJSON
 }
 
-type InventoryRequest struct {
-	Filter Interface
-	Key string
-	KeyIsIp bool
-	Timeout time.Duration
-	Back chan interface{}
-}
-
-func NewInvReq(filter Interface, tout time.Duration) InventoryRequest {
-	return InventoryRequest{
-		Filter: filter,
-		Timeout: tout,
-		Back: make(chan interface{}, 100),
+func NewContainerRequest() ContainerRequest {
+	cr := ContainerRequest{
+		IssuedAt: time.Now(),
+		Back: make(chan types.ContainerJSON, 5),
 	}
+	return cr
+}
+
+
+func NewIDContainerRequest(id string) ContainerRequest {
+	cr := ContainerRequest{
+		ID: id,
+		IssuedAt: time.Now(),
+		Back: make(chan types.ContainerJSON, 5),
+	}
+	return cr
+}
+
+func NewNameContainerRequest(name string) ContainerRequest {
+	cr := ContainerRequest{
+		Name: name,
+		IssuedAt: time.Now(),
+		Back: make(chan types.ContainerJSON, 5),
+	}
+	return cr
+}
+
+func NewIPContainerRequest(ip string) ContainerRequest {
+	cr := ContainerRequest{
+		IP: ip,
+		IssuedAt: time.Now(),
+		Back: make(chan types.ContainerJSON, 5),
+	}
+	return cr
+}
+
+func (this ContainerRequest) Equal(other types.ContainerJSON) bool {
+	matchIP := false
+	if other.NetworkSettings.Networks != nil {
+		for _, net := range other.NetworkSettings.Networks {
+			if this.IP == net.IPAddress {
+				matchIP = true
+			}
+		}
+	}
+	return this.ID == other.ID || this.Name == other.Name || matchIP
 }
 
