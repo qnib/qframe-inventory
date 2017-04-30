@@ -9,7 +9,12 @@ import (
 	"fmt"
 )
 
+const (
+	version = "0.0.0"
+)
+
 type Inventory struct {
+	Version string
 	Data   map[string]Interface
 	PendingRequests []InventoryRequest
 	mux sync.Mutex
@@ -17,6 +22,7 @@ type Inventory struct {
 
 func NewInventory() Inventory {
 	return Inventory{
+		Version: version,
 		Data: make(map[string]Interface),
 		PendingRequests: []InventoryRequest{},
 	}
