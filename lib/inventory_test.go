@@ -4,7 +4,6 @@ package qframe_inventory
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
-	//"github.com/docker/docker/api/types"
 	"time"
 )
 
