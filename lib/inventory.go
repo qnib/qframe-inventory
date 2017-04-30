@@ -44,9 +44,7 @@ func (i *Inventory) GetItem(key string) (cntOut types.ContainerJSON, err error) 
 }
 
 func filterItem(in ContainerRequest, other types.ContainerJSON) (out types.ContainerJSON, err error) {
-	fmt.Println(" >> in filterItem)")
 	if in.Equal(other) {
-		fmt.Println("is True!")
 		return other, err
 	}
 	return out, errors.New("filter does not match")
@@ -72,12 +70,9 @@ func (i *Inventory) HandleRequest(req ContainerRequest) (err error) {
 func (i *Inventory) ServeRequest(req ContainerRequest) {
 	err := i.HandleRequest(req)
 	if err != nil {
-		fmt.Println("  > Append req to list")
 		i.mux.Lock()
 		i.PendingRequests = append(i.PendingRequests, req)
 		i.mux.Unlock()
-	} else {
-		fmt.Println("HandleRequest sucessful")
 	}
 }
 
@@ -89,22 +84,13 @@ func (inv *Inventory) CheckRequests() {
 	}
 	inv.mux.Lock()
 	defer inv.mux.Unlock()
-	for i, req := range inv.PendingRequests {
+	remainReq := []ContainerRequest{}
+	for _, req := range inv.PendingRequests {
 		err := inv.HandleRequest(req)
 		if err != nil {
-			fmt.Printf("  > %s: %v\n", i, err.Error())
-		} else {
-			fmt.Printf("  > %s: OK\n", i)
+			remainReq = append(remainReq, req)
 		}
-		/*if err == nil {
-			fmt.Println(" >> HandleRegest was sucessful")
-			if len(inv.PendingRequests) == 1 {
-				inv.PendingRequests = []InventoryRequest{}
-			} else {
-				inv.PendingRequests = append(inv.PendingRequests[:i], inv.PendingRequests[i+1:]...)
-			}
-		}
-		*/
 	}
+	inv.PendingRequests = remainReq
 }
 

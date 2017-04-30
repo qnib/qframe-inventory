@@ -9,6 +9,7 @@ import (
 	"time"
 	"github.com/docker/docker/api/types"
 
+	"strings"
 )
 
 type ContainerRequest struct {
@@ -64,6 +65,6 @@ func (this ContainerRequest) Equal(other types.ContainerJSON) bool {
 			}
 		}
 	}
-	return this.ID == other.ID || this.Name == other.Name || matchIP
+	return this.ID == other.ID || this.Name == strings.Trim(other.Name, "/") || matchIP
 }
 

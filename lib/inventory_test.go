@@ -76,3 +76,21 @@ func TestInventory_CheckRequest(t *testing.T) {
 	m := <-req.Back
 	assert.Equal(t, cnt1, m)
 }
+
+func TestInventory_CheckMultipleRequest(t *testing.T) {
+	i := NewInventory()
+	req := NewNameContainerRequest(cnt1.Name)
+	i.ServeRequest(req)
+	req2 := NewNameContainerRequest(cnt2.Name)
+	i.ServeRequest(req2)
+	assert.Equal(t, len(i.PendingRequests), 2)
+	i.SetItem(cnt1.ID, cnt1)
+	i.CheckRequests()
+	m := <-req.Back
+	assert.Equal(t, cnt1, m)
+	assert.Equal(t, 1, len(i.PendingRequests))
+	i.SetItem(cnt2.ID, cnt2)
+	i.CheckRequests()
+	m2 := <-req2.Back
+	assert.Equal(t, cnt2, m2)
+}
