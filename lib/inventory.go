@@ -51,7 +51,6 @@ func filterItem(in ContainerRequest, other types.ContainerJSON) (out types.Conta
 }
 
 
-
 func (i *Inventory) HandleRequest(req ContainerRequest) (err error) {
 	if len(i.Data) == 0 {
 		return errors.New("Inventory is empty so far")
@@ -59,7 +58,11 @@ func (i *Inventory) HandleRequest(req ContainerRequest) (err error) {
 	for _, cnt := range i.Data {
 		res, err := filterItem(req, cnt)
 		if err == nil {
-			req.Back <- res
+			req.Back <- NewOKResponse(res)
+			return err
+		} else if req.TimedOut() {
+			err = errors.New(fmt.Sprintf("Timed out after %s", req.Timeout.String()))
+			req.Back <- NewFAILResponse(err)
 			return err
 		}
 	}
