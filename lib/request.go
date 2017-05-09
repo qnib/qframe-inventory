@@ -14,6 +14,7 @@ import (
 
 type ContainerRequest struct {
 	IssuedAt 	time.Time
+	Source 		string
 	Timeout	 	time.Duration
 	Name 		string
 	ID 			string
@@ -21,9 +22,10 @@ type ContainerRequest struct {
 	Back 		chan Response
 }
 
-func NewContainerRequest(to time.Duration) ContainerRequest {
+func NewContainerRequest(src string, to time.Duration) ContainerRequest {
 	cr := ContainerRequest{
 		IssuedAt: 	time.Now(),
+		Source: 	src,
 		Timeout:  	to,
 		Back: 		make(chan Response, 5),
 	}
@@ -31,20 +33,20 @@ func NewContainerRequest(to time.Duration) ContainerRequest {
 }
 
 
-func NewIDContainerRequest(id string) ContainerRequest {
-	cr := NewContainerRequest(time.Second)
+func NewIDContainerRequest(src, id string) ContainerRequest {
+	cr := NewContainerRequest(src, time.Second)
 	cr.ID = id
 	return cr
 }
 
-func NewNameContainerRequest(name string) ContainerRequest {
-	cr := NewContainerRequest(time.Second)
+func NewNameContainerRequest(src, name string) ContainerRequest {
+	cr := NewContainerRequest(src, time.Second)
 	cr.Name =  name
 	return cr
 }
 
-func NewIPContainerRequest(ip string) ContainerRequest {
-	cr := NewContainerRequest(time.Second)
+func NewIPContainerRequest(src, ip string) ContainerRequest {
+	cr := NewContainerRequest(src, time.Duration(2)*time.Second)
 	cr.IP =  ip
 	return cr
 }
