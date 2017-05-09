@@ -13,46 +13,39 @@ import (
 )
 
 type ContainerRequest struct {
-	IssuedAt time.Time
-	Name string
-	ID string
-	IP string
-	Back chan types.ContainerJSON
+	IssuedAt 	time.Time
+	Timeout	 	time.Duration
+	Name 		string
+	ID 			string
+	IP 			string
+	Back 		chan Response
 }
 
-func NewContainerRequest() ContainerRequest {
+func NewContainerRequest(to time.Duration) ContainerRequest {
 	cr := ContainerRequest{
-		IssuedAt: time.Now(),
-		Back: make(chan types.ContainerJSON, 5),
+		IssuedAt: 	time.Now(),
+		Timeout:  	to,
+		Back: 		make(chan Response, 5),
 	}
 	return cr
 }
 
 
 func NewIDContainerRequest(id string) ContainerRequest {
-	cr := ContainerRequest{
-		ID: id,
-		IssuedAt: time.Now(),
-		Back: make(chan types.ContainerJSON, 5),
-	}
+	cr := NewContainerRequest(time.Second)
+	cr.ID = id
 	return cr
 }
 
 func NewNameContainerRequest(name string) ContainerRequest {
-	cr := ContainerRequest{
-		Name: name,
-		IssuedAt: time.Now(),
-		Back: make(chan types.ContainerJSON, 5),
-	}
+	cr := NewContainerRequest(time.Second)
+	cr.Name =  name
 	return cr
 }
 
 func NewIPContainerRequest(ip string) ContainerRequest {
-	cr := ContainerRequest{
-		IP: ip,
-		IssuedAt: time.Now(),
-		Back: make(chan types.ContainerJSON, 5),
-	}
+	cr := NewContainerRequest(time.Second)
+	cr.IP =  ip
 	return cr
 }
 
@@ -68,3 +61,8 @@ func (this ContainerRequest) Equal(other types.ContainerJSON) bool {
 	return this.ID == other.ID || this.Name == strings.Trim(other.Name, "/") || matchIP
 }
 
+func (cr *ContainerRequest) TimedOut() bool {
+	tDiff := time.Now().Sub(cr.IssuedAt)
+	return tDiff > cr.Timeout
+
+}

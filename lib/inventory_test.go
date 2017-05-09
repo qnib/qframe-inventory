@@ -3,6 +3,7 @@ package qframe_inventory
 
 import (
 	"testing"
+	"time"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,7 +31,7 @@ func TestInventory_GetItem(t *testing.T) {
 }
 
 func TestInventory_filterItem(t *testing.T) {
-	req1 := NewContainerRequest()
+	req1 := NewContainerRequest(time.Second)
 	req1.Name = "CntName1"
 	got, err := filterItem(req1, cnt1)
 	assert.NoError(t, err)
@@ -46,8 +47,8 @@ func TestInventory_HandleRequest(t *testing.T) {
 	req := NewNameContainerRequest(cnt1.Name)
 	err := i.HandleRequest(req)
 	assert.NoError(t, err)
-	m := <-req.Back
-	assert.Equal(t, cnt1, m)
+	resp := <-req.Back
+	assert.Equal(t, cnt1, resp.Container)
 	reqID := NewIDContainerRequest("FakeID")
 	err = i.HandleRequest(reqID)
 	assert.Error(t, err)
@@ -73,8 +74,8 @@ func TestInventory_CheckRequest(t *testing.T) {
 	assert.Equal(t, len(i.PendingRequests), 1)
 	i.SetItem(cnt1.ID, cnt1)
 	i.CheckRequests()
-	m := <-req.Back
-	assert.Equal(t, cnt1, m)
+	resp := <-req.Back
+	assert.Equal(t, cnt1, resp.Container)
 }
 
 func TestInventory_CheckMultipleRequest(t *testing.T) {
@@ -82,15 +83,17 @@ func TestInventory_CheckMultipleRequest(t *testing.T) {
 	req := NewNameContainerRequest(cnt1.Name)
 	i.ServeRequest(req)
 	req2 := NewNameContainerRequest(cnt2.Name)
+	req2.Timeout = time.Duration(5)*time.Second
 	i.ServeRequest(req2)
 	assert.Equal(t, len(i.PendingRequests), 2)
 	i.SetItem(cnt1.ID, cnt1)
 	i.CheckRequests()
-	m := <-req.Back
-	assert.Equal(t, cnt1, m)
+	r1 := <-req.Back
+	assert.Equal(t, cnt1, r1.Container)
 	assert.Equal(t, 1, len(i.PendingRequests))
 	i.SetItem(cnt2.ID, cnt2)
 	i.CheckRequests()
-	m2 := <-req2.Back
-	assert.Equal(t, cnt2, m2)
+	r2 := <-req2.Back
+	assert.NoError(t, r2.Error, "Should be fine")
+	assert.Equal(t, cnt2, r2.Container)
 }

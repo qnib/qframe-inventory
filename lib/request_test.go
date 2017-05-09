@@ -2,6 +2,7 @@ package qframe_inventory
 
 import (
 	"testing"
+	"time"
 	"github.com/stretchr/testify/assert"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/network"
@@ -36,4 +37,10 @@ func TestContainer_Equal(t *testing.T) {
 	assert.True(t, checkName.Equal(cnt))
 	checkID := ContainerRequest{ID: "CntID1"}
 	assert.True(t, checkID.Equal(cnt))
+}
+
+func TestContainerRequest_TimedOut(t *testing.T) {
+	req := ContainerRequest{Name: "CntName1"}
+	req.IssuedAt = time.Now().AddDate(0,0,-1)
+	assert.True(t, req.TimedOut(), "Should be timed out long ago")
 }
