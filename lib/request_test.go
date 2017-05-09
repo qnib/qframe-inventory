@@ -31,7 +31,7 @@ func NewContainer(id, name string, ips map[string]string) types.ContainerJSON {
 
 func TestContainer_Equal(t *testing.T) {
 	cnt := NewContainer("CntID1", "CntName1", map[string]string{"eth0": "172.17.0.2"})
-	checkIP := NewIPContainerRequest("172.17.0.2")
+	checkIP := NewIPContainerRequest("src1", "172.17.0.2")
 	assert.True(t, checkIP.Equal(cnt))
 	checkName := ContainerRequest{Name: "CntName1"}
 	assert.True(t, checkName.Equal(cnt))
@@ -40,7 +40,10 @@ func TestContainer_Equal(t *testing.T) {
 }
 
 func TestContainerRequest_TimedOut(t *testing.T) {
-	req := ContainerRequest{Name: "CntName1"}
+	req := ContainerRequest{
+		Source: "src1",
+		Name: "CntName1",
+	}
 	req.IssuedAt = time.Now().AddDate(0,0,-1)
 	assert.True(t, req.TimedOut(), "Should be timed out long ago")
 }

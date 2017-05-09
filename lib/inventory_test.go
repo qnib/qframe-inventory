@@ -31,7 +31,7 @@ func TestInventory_GetItem(t *testing.T) {
 }
 
 func TestInventory_filterItem(t *testing.T) {
-	req1 := NewContainerRequest(time.Second)
+	req1 := NewContainerRequest("src", time.Second)
 	req1.Name = "CntName1"
 	got, err := filterItem(req1, cnt1)
 	assert.NoError(t, err)
@@ -44,12 +44,12 @@ func TestInventory_filterItem(t *testing.T) {
 func TestInventory_HandleRequest(t *testing.T) {
 	i := NewInventory()
 	i.SetItem(cnt1.ID, cnt1)
-	req := NewNameContainerRequest(cnt1.Name)
+	req := NewNameContainerRequest("src", cnt1.Name)
 	err := i.HandleRequest(req)
 	assert.NoError(t, err)
 	resp := <-req.Back
 	assert.Equal(t, cnt1, resp.Container)
-	reqID := NewIDContainerRequest("FakeID")
+	reqID := NewIDContainerRequest("src", "FakeID")
 	err = i.HandleRequest(reqID)
 	assert.Error(t, err)
 
@@ -58,10 +58,10 @@ func TestInventory_HandleRequest(t *testing.T) {
 func TestInventory_ServeRequest(t *testing.T) {
 	i := NewInventory()
 	i.SetItem(cnt1.ID, cnt1)
-	req := NewNameContainerRequest(cnt1.Name)
+	req := NewNameContainerRequest("src", cnt1.Name)
 	i.ServeRequest(req)
 	assert.Equal(t, len(i.PendingRequests), 0)
-	req2 := NewNameContainerRequest(cnt2.Name)
+	req2 := NewNameContainerRequest("src", cnt2.Name)
 	i.ServeRequest(req2)
 	assert.Equal(t, len(i.PendingRequests), 1)
 }
@@ -69,7 +69,7 @@ func TestInventory_ServeRequest(t *testing.T) {
 
 func TestInventory_CheckRequest(t *testing.T) {
 	i := NewInventory()
-	req := NewNameContainerRequest(cnt1.Name)
+	req := NewNameContainerRequest("src", cnt1.Name)
 	i.ServeRequest(req)
 	assert.Equal(t, len(i.PendingRequests), 1)
 	i.SetItem(cnt1.ID, cnt1)
@@ -80,9 +80,9 @@ func TestInventory_CheckRequest(t *testing.T) {
 
 func TestInventory_CheckMultipleRequest(t *testing.T) {
 	i := NewInventory()
-	req := NewNameContainerRequest(cnt1.Name)
+	req := NewNameContainerRequest("src", cnt1.Name)
 	i.ServeRequest(req)
-	req2 := NewNameContainerRequest(cnt2.Name)
+	req2 := NewNameContainerRequest("src", cnt2.Name)
 	req2.Timeout = time.Duration(5)*time.Second
 	i.ServeRequest(req2)
 	assert.Equal(t, len(i.PendingRequests), 2)
